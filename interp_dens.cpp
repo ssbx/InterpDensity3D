@@ -23,6 +23,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include <math.h>
 
 
@@ -108,7 +109,8 @@ int main ()
     }
 
     // start time
-    clock_t start_time = clock();
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &start);
 
 
     // parameter reading
@@ -295,6 +297,7 @@ int main ()
     fprintf (outgridfile, "POINT_DATA %i\n", num_x_lines*num_y_lines*num_z_lines );
 
 
+#pragma omp parallel for
     for (int i = 0; i < num_y_lines; i++)
     {
         for (int j = 0; j < num_x_lines; j++)
@@ -366,8 +369,9 @@ int main ()
     fclose (outgridfile);
 
     // end time
-    clock_t end_time = clock();
-    float diff_time = ((float)end_time - (float)start_time)/1000.0;  // run time
+    struct timespec end;
+    clock_gettime(CLOCK_MONOTONIC_RAW, &end);
+    double diff_time = (end.tv_sec - start.tv_sec) + (end.tv_nsec - start.tv_nsec) / 1000000000.0;
 
     printf ("\n\nProcessing completed in %.2lf seconds\n\n", diff_time );
 
