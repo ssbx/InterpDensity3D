@@ -302,8 +302,10 @@ int main (int argc, char *argv[])
     fprintf (outgridfile, "POINT_DATA %i\n", num_x_lines*num_y_lines*num_z_lines );
 
 
-    long progress = 0;
     long total = num_y_lines * num_x_lines * num_z_lines;
+    float progress = 0;
+    float pc = total / 100;
+    float step = (num_x_lines * num_z_lines) / pc;
 #pragma omp parallel for
     for (int i = 0; i < num_y_lines; i++)
     {
@@ -338,11 +340,9 @@ int main (int argc, char *argv[])
 
             }
         }
-
-        long newprogress = num_x_lines * num_z_lines;
 #pragma opm atomic
-        {progress += newprogress;}
-        fprintf(stdout, "progress... %li/%li\n", progress, total);
+        {progress += step;}
+        fprintf(stdout, "%0.0f%% completed\n", progress);
 
     }
 
