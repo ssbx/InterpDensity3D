@@ -82,7 +82,7 @@ double calc_quartkern_val(double pts_distance, double kernel_bandwidth)
     return t*t;
 }
 
-int main ()
+int main (int argc, char *argv[])
 {
 
     double const Pi=4*atan(1);
@@ -94,10 +94,15 @@ int main ()
     cout << "v. 1.0 - 2011-04\n\n\n";
 
 
-    // input of parameter file name and file opening
-    cout << "Enter name of input parameter file: ";
   	string param_filename;
-    cin >> param_filename;
+    if (argc < 2) {
+        // input of parameter file name and file opening
+        cout << "Enter name of input parameter file: ";
+        cin >> param_filename;
+    } else {
+        string char_param_filename(argv[1]);
+        param_filename = char_param_filename;
+    }
 
     ifstream param_file;
     param_file.open(param_filename.c_str(), ios::binary);
@@ -297,6 +302,8 @@ int main ()
     fprintf (outgridfile, "POINT_DATA %i\n", num_x_lines*num_y_lines*num_z_lines );
 
 
+    long progress = 0;
+    long total = num_y_lines * num_x_lines * num_z_lines;
 #pragma omp parallel for
     for (int i = 0; i < num_y_lines; i++)
     {
@@ -328,9 +335,15 @@ int main ()
                 if (normal_kernel) normal_kernel_values[i][j][k] = normkern_cellvalue/(2*Pi*kernel_bandwidth*kernel_bandwidth);
                 if (quartic_kernel) quartic_kernel_values[i][j][k] = quartkern_cellvalue*3/(Pi*kernel_bandwidth*kernel_bandwidth);
 
-                //
+
             }
         }
+
+        long newprogress = num_x_lines * num_z_lines;
+#pragma opm atomic
+        {progress += newprogress;}
+        fprintf(stdout, "progress... %li/%li\n", progress, total);
+
     }
 
 
